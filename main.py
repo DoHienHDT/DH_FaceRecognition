@@ -6,9 +6,7 @@
 import cv2
 import numpy as np
 import face_recognition
-from PIL import Image, ImageDraw
 import os
-
 from datetime import datetime
 
 # from PIL import ImageGrab
@@ -69,7 +67,6 @@ while True:
             y1, x2, y2, x1 = y1 * 2, x2 * 2, y2 * 2, x1 * 2
             cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
             cv2.rectangle(img, (x1, y2 - 35), (x2, y2), (0, 255, 0), cv2.FILLED)
-            font = cv2.FONT_HERSHEY_SIMPLEX
 
             if medium - faceDis[matchIndex] > 0.2:
                 cv2.putText(img, name[:-2], (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
