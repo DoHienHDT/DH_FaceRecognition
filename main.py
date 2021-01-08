@@ -32,10 +32,6 @@ def findEncodings(images):
         encodeList.append(encode)
     return encodeList
 
-# logging.basicConfig(filename='logs.log',
-#             filemode='w',
-#             level=logging.INFO)
-
 #### FOR CAPTURING SCREEN RATHER THAN WEBCAM
 # def captureScreen(bbox=(300,300,690+300,530+300)):
 #     capScr = np.array(ImageGrab.grab(bbox))
@@ -49,7 +45,6 @@ cap = cv2.VideoCapture(0)
 
 while True:
     success, img = cap.read()
-    # img = captureScreen()
     imgS = cv2.resize(img, (0, 0), None, 0.5, 0.5)
     imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
 
@@ -59,7 +54,6 @@ while True:
     for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):
         matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
         faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)
-        # print(faceDis)
         matchIndex = np.argmin(faceDis)
 
         if matches[matchIndex]:
@@ -70,28 +64,23 @@ while True:
             print(faceDis[matchIndex], medium, medium - faceDis[matchIndex])
 
             name = classNames[matchIndex].upper()
-            # print(faceDis)
 
             y1, x2, y2, x1 = faceLoc
             y1, x2, y2, x1 = y1 * 2, x2 * 2, y2 * 2, x1 * 2
             cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
             cv2.rectangle(img, (x1, y2 - 35), (x2, y2), (0, 255, 0), cv2.FILLED)
+            font = cv2.FONT_HERSHEY_SIMPLEX
 
             if medium - faceDis[matchIndex] > 0.2:
-                # logging.info(name[:-2])
                 cv2.putText(img, name[:-2], (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
-                cv2.imwrite('SaveImage/'+name[:-2]+'.jpg', img)
+                cv2.putText(img, str(datetime.now()), (x1 + 6, y2 + 50), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+                cv2.imwrite('HistoryFaceDetect/'+name[:-2]+'.jpg', img)
             else:
+                cv2.putText(img, str(datetime.now()), (x1 + 6, y2 + 50), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
                 cv2.putText(img, "Unknown", (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+                cv2.imwrite('HistoryFaceDetect/' + name[:-2] + '.jpg', img)
             cv2.putText(img, f'{round(faceDis[matchIndex], 2)}', (50, 50), cv2.FONT_HERSHEY_COMPLEX, 1,
                         (0, 0, 255), 2)
-
-    imgl = Image.new('RGB', (100, 30), color=(73, 109, 137))
-
-    d = ImageDraw.Draw(imgl)
-    d.text((10, 10), "Hello World", fill=(255, 255, 0))
-
-    imgl.save('pil_text.png')
 
     cv2.imshow('Webcam', img)
     cv2.waitKey(1)
