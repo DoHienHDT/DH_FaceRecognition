@@ -1,50 +1,64 @@
 from tkinter import *
 import cv2
 import numpy as np
+import random
 from PIL import Image, ImageTk
-import time
-from scrollimage import ScrollableImage
+
+import face_recognition
+import os
+from datetime import datetime
 
 root = Tk()
-root.geometry("600x540")
-root.configure(bg="white")
-# Button(root, text="Take Snapshot", font=("times new roman", 20, 'bold'), bg="black",fg="red").pack()
+sizex = 450
+sizey = 300
+posx = 100
+posy = 100
+root.wm_geometry("%dx%d+%d+%d" % (sizex, sizey, posx, posy))
+
 f1 = LabelFrame(root, bg="red")
 f1.pack(side=RIGHT)
 
-text = Text(root, wrap="none")
-vsb = Scrollbar(orient="vertical", command=text.yview)
-text.configure(yscrollcommand=vsb.set)
-vsb.pack(side=LEFT, fill="y")
-text.pack(side=LEFT, expand=True)
-
-for i in range(20):
-    b =  Button(root, text="Button #%s" % i, highlightbackground='#3E4149')
-    text.window_create("end", window=b, pady=10)
-    text.insert("end", "\n")
-
-text.configure(state="disabled")
-
-def add_timestamp(self):
-    fully_scrolled_down = self.text.yview()[1] == 1.0
-    self.text.insert("end", time.ctime() + "\n")
-    if fully_scrolled_down:
-        self.text.see("end")
-    self.after(1000, self.add_timestamp)
-
+f1 = LabelFrame(root, bg="red")
+f1.pack(side=RIGHT)
 
 L1 = Label(f1, bg="red")
 L1.pack()
+
+path = 'ImagesCompany'
+images = []
+classNames = []
+myList = os.listdir(path)
+print(myList)
+for cl in myList:
+    curImg = cv2.imread(f'{path}/{cl}')
+    images.append(curImg)
+    classNames.append(os.path.splitext(cl)[0])
+print(classNames)
+
+def findEncodings(images):
+    encodeList = []
+    for img in images:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        encode = face_recognition.face_encodings(img)[0]
+        encodeList.append(encode)
+    return encodeList
+
+encodeListKnown = findEncodings(images)
+print('Encoding Complete')
+
 cap = cv2.VideoCapture(0)
 width = 1500
 height = 1080
+count = 0
+button_label_list = []
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 
+
 while True:
-    img = cap.read()[1]
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = ImageTk.PhotoImage(Image.fromarray(img))
-    L1['image'] = img
+    imgCap = cap.read()[1]
+    imgCap = cv2.cvtColor(imgCap, cv2.COLOR_BGR2RGB)
+    imgCap = ImageTk.PhotoImage(Image.fromarray(imgCap))
+    L1['image'] = imgCap
     # root.add_widget(layout)
     root.update()
