@@ -2,7 +2,6 @@ from tkinter import *
 import cv2
 import numpy as np
 from PIL import Image, ImageTk
-import tkinter as tk
 import face_recognition
 import os
 import PIL
@@ -11,33 +10,19 @@ from datetime import datetime
 from autocrop import Cropper
 
 
-def addBox(imagesHistory, dateCHeck):
-    # print(f'afterAppend{dateCHeck}')
+def addBox(arrayImageHistory, dateCHeck):
     # I use len(all_entries) to get number of next free column
     i = 0
-    for imageArray in imagesHistory:
+    for imageArray in arrayImageHistory:
         i += 1
         box_row = i * 2 + 1
         Button(window, image=imageArray).grid(row=box_row, column=1)
 
+    j = 0
     for timeCheck in dateCHeck:
-        text_row = i * 2 + 2
+        j += 1
+        text_row = j * 2 + 2
         Label(window, text=timeCheck).grid(row=text_row, column=1)
-    # next_column = len(all_entries)
-    #
-    # # add label in first row
-    # lab = Label(window, text=str(next_column + 1))
-    # text_row = next_column * 2 + 2
-    # lab.grid(row=text_row, column=1)
-    #
-    #
-    #
-    # # add entry in second row
-    # ent = Button(window, image=imgShowDemo)
-    # box_row = next_column * 2 + 1
-    # ent.grid(row=index-1, column=1)
-    #
-    # all_entries.append(ent)
 
 
 root = Tk()
@@ -79,9 +64,9 @@ for cl in myList:
 print(classNames)
 
 
-def findEncodings(images):
+def findEncodings(imagesEndcoding):
     encodeList = []
-    for imgArray in images:
+    for imgArray in imagesEndcoding:
         imgCVT = cv2.cvtColor(imgArray, cv2.COLOR_BGR2RGB)
         encode = face_recognition.face_encodings(imgCVT)[0]
         encodeList.append(encode)
@@ -147,18 +132,8 @@ while True:
 
             name = classNames[matchIndex].upper()
 
-            y1, x2, y2, x1 = faceLoc
-            y1, x2, y2, x1 = y1 * 2, x2 * 2, y2 * 2, x1 * 2
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.rectangle(frame, (x1, y2 - 35), (x2, y2), (0, 255, 0), cv2.FILLED)
-
             if medium - faceDis[matchIndex] > 0.2:
-                cv2.putText(frame, name[:-2], (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
-                cv2.putText(frame, str(datetime.now()), (x1 + 6, y2 + 50), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255),
-                            2)
-
                 timeSleep += 1
-
                 if timeSleep % 15 == 0:
                     dateDetect = f'{name[:-2]}_{str(datetime.now())}'
 
@@ -168,9 +143,24 @@ while True:
                     clearFrame()
                     cv2.imwrite('HistoryFaceDetect/' + name[:-2] + '.jpg', frame)
                     readFileImage(dateArrayHistory)
+                else:
+                    y1, x2, y2, x1 = faceLoc
+                    y1, x2, y2, x1 = y1 * 2, x2 * 2, y2 * 2, x1 * 2
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    cv2.rectangle(frame, (x1, y2 - 35), (x2, y2), (0, 255, 0), cv2.FILLED)
+
+                    cv2.putText(frame, name[:-2], (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+                    # cv2.putText(frame, str(datetime.now()), (x1 + 6, y2 + 50), cv2.FONT_HERSHEY_COMPLEX, 1,
+                    #             (255, 255, 255),
+                    #             2)
             else:
-                cv2.putText(frame, str(datetime.now()), (x1 + 6, y2 + 50), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255),
-                            2)
+                y1, x2, y2, x1 = faceLoc
+                y1, x2, y2, x1 = y1 * 2, x2 * 2, y2 * 2, x1 * 2
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.rectangle(frame, (x1, y2 - 35), (x2, y2), (0, 255, 0), cv2.FILLED)
+
+                # cv2.putText(frame, str(datetime.now()), (x1 + 6, y2 + 50), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255),
+                #             2)
                 cv2.putText(frame, "Unknown", (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
 
             cv2.putText(frame, f'{round(faceDis[matchIndex], 2)}', (50, 50), cv2.FONT_HERSHEY_COMPLEX, 1,
@@ -184,3 +174,5 @@ while True:
     lmain.imgtk = imgtk
     lmain.configure(image=imgtk)
     root.update()
+
+

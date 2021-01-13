@@ -110,3 +110,20 @@ canvas.pack(side="left")
 
 while True:
     root.update()
+
+
+    # next_column = len(all_entries)
+    #
+    # # add label in first row
+    # lab = Label(window, text=str(next_column + 1))
+    # text_row = next_column * 2 + 2
+    # lab.grid(row=text_row, column=1)
+    #
+    #
+    #
+    # # add entry in second row
+    # ent = Button(window, image=imgShowDemo)
+    # box_row = next_column * 2 + 1
+    # ent.grid(row=index-1, column=1)
+    #
+    # all_entries.append(ent)
