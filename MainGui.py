@@ -67,23 +67,24 @@ addboxButton.pack()
 def clearFrame():
     for widget in window.winfo_children():
         widget.destroy()
-
+    addBox()
 
 Button(myframe, text="clear frame", command=clearFrame).pack()
 
 canvas = Canvas(myframe, bg="white")
-
 images = []
 path = 'HistoryFaceDetect'
 myList = os.listdir(path)
-for cl in myList:
-    # curImg = cv2.imread(f'{path}/{cl}')
-    nameFile = f'{path}/{cl}'
-    imgAdd = ImageTk.PhotoImage(Image.open(nameFile))
-    images.append(imgAdd)
 
-File = "HistoryFaceDetect/croppedpng66.png"
-img = ImageTk.PhotoImage(Image.open(File))
+for cl in myList:
+    nameFile = f'{path}/{cl}'
+    imgAdd = Image.open(nameFile)
+    imgAdd = imgAdd.resize((200, 200), Image.ANTIALIAS)
+    add = ImageTk.PhotoImage(imgAdd)
+    images.append(add)
+
+# File = "HistoryFaceDetect/croppedpng66.png"
+# img = ImageTk.PhotoImage(Image.open(File))
 
 # cropper = Cropper()
 #

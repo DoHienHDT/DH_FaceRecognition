@@ -6,22 +6,23 @@ import tkinter as tk
 import face_recognition
 import os
 import PIL
+import shutil
 from datetime import datetime
 from autocrop import Cropper
 
-def addBox():
-    # I use len(all_entries) to get nuber of next free column
 
-    ent = Button(window, image=imgShowDemo)
-    arrayButton.insert(0, ent)
-
+def addBox(imagesHistory, dateCHeck):
+    # print(f'afterAppend{dateCHeck}')
+    # I use len(all_entries) to get number of next free column
     i = 0
-    for item in arrayButton:
+    for imageArray in imagesHistory:
         i += 1
-        button = item
         box_row = i * 2 + 1
-        button.grid(row=box_row, column=1)
+        Button(window, image=imageArray).grid(row=box_row, column=1)
 
+    for timeCheck in dateCHeck:
+        text_row = i * 2 + 2
+        Label(window, text=timeCheck).grid(row=text_row, column=1)
     # next_column = len(all_entries)
     #
     # # add label in first row
@@ -57,15 +58,9 @@ frameAddBox.place(x=10, y=30)
 
 canvas = Canvas(frameAddBox, bg="white")
 
-File = "cropped.png"
-imgShowDemo = ImageTk.PhotoImage(Image.open(File))
-
-addboxButton = Button(root, text='<Add Time Input>', fg="Red", command=addBox, highlightbackground='#3E4149')
-addboxButton.pack()
-
 
 def myfunction(event):
-    canvas.configure(scrollregion=canvas.bbox("all"), width=200, height=1150)
+    canvas.configure(scrollregion=canvas.bbox("all"), width=250, height=1150)
 
 
 window = Frame(canvas, bg="white")
@@ -77,7 +72,6 @@ canvas.create_window((0, 0), window=window, anchor='nw')
 window.bind("<Configure>", myfunction)
 
 
-
 for cl in myList:
     curImg = cv2.imread(f'{path}/{cl}')
     images.append(curImg)
@@ -87,11 +81,42 @@ print(classNames)
 
 def findEncodings(images):
     encodeList = []
-    for img in images:
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        encode = face_recognition.face_encodings(img)[0]
+    for imgArray in images:
+        imgCVT = cv2.cvtColor(imgArray, cv2.COLOR_BGR2RGB)
+        encode = face_recognition.face_encodings(imgCVT)[0]
         encodeList.append(encode)
     return encodeList
+
+
+def clearFrame():
+    for widget in window.winfo_children():
+        widget.destroy()
+
+
+def clearFounder():
+    for rootFile, dirs, files in os.walk('HistoryFaceDetect'):
+        for f in files:
+            os.unlink(os.path.join(rootFile, f))
+        for d in dirs:
+            shutil.rmtree(os.path.join(rootFile, d))
+
+
+pathHisotry = 'HistoryFaceDetect'
+imagesHistory = []
+dateArrayHistory = []
+
+def readFileImage(dateCHeck):
+
+    myList = os.listdir(pathHisotry)
+    for clArray in myList:
+        nameFile = f'{pathHisotry}/{clArray}'
+        imageOpen = Image.open(nameFile)
+        imageOpen = imageOpen.resize((200, 200), Image.ANTIALIAS)
+        addImageArray = ImageTk.PhotoImage(imageOpen)
+        imagesHistory.insert(0, addImageArray)
+
+    if len(imagesHistory) != 0:
+        addBox(imagesHistory, dateCHeck)
 
 
 encodeListKnown = findEncodings(images)
@@ -120,8 +145,6 @@ while True:
             sortName = np.sort(faceDis)
             medium = sortName[int(sortName.size / 2)]
 
-            # print(faceDis[matchIndex], medium, medium - faceDis[matchIndex])
-
             name = classNames[matchIndex].upper()
 
             y1, x2, y2, x1 = faceLoc
@@ -136,24 +159,20 @@ while True:
 
                 timeSleep += 1
 
-                if timeSleep % 10 == 0:
-                    cv2.imwrite('HistoryFaceDetect/' + name[:-2] + '.jpg', frame)
-                #     ent = Button(window, image=imgShowDemo)
-                #     arrayButton.insert(0, ent)
-                #
-                #     indexImage = 0
-                #     for item in arrayButton:
-                #         indexImage += 1
-                #         button = item
-                #         box_row = indexImage * 2 + 1
-                #         button.grid(row=box_row, column=1)
+                if timeSleep % 15 == 0:
+                    dateDetect = f'{name[:-2]}_{str(datetime.now())}'
 
-                # cv2.imwrite('HistoryFaceDetect/' + name[:-2] + '.jpg', img)
+                    dateArrayHistory.insert(0, dateDetect)
+
+                    clearFounder()
+                    clearFrame()
+                    cv2.imwrite('HistoryFaceDetect/' + name[:-2] + '.jpg', frame)
+                    readFileImage(dateArrayHistory)
             else:
                 cv2.putText(frame, str(datetime.now()), (x1 + 6, y2 + 50), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255),
                             2)
                 cv2.putText(frame, "Unknown", (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
-                # cv2.imwrite('HistoryFaceDetect/' + name[:-2] + '.jpg', img)
+
             cv2.putText(frame, f'{round(faceDis[matchIndex], 2)}', (50, 50), cv2.FONT_HERSHEY_COMPLEX, 1,
                         (0, 0, 255), 2)
 
