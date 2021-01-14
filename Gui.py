@@ -7,7 +7,6 @@ import os
 import PIL
 import shutil
 from datetime import datetime
-from autocrop import Cropper
 
 
 def addBox(arrayImageHistory, dateCHeck):
@@ -107,7 +106,7 @@ def readFileImage(dateCHeck):
 encodeListKnown = findEncodings(images)
 
 width, height = 1700, 1280
-cropper = Cropper()
+
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
