@@ -34,6 +34,10 @@ imagesDetect = []
 arrayButton = []
 classNames = []
 all_entries = []
+
+face_locations = []
+face_names = []
+
 myList = os.listdir(path)
 print(myList)
 
@@ -88,6 +92,7 @@ def clearFounder():
 pathHisotry = 'HistoryFaceDetect'
 imagesHistory = []
 dateArrayHistory = []
+process_this_frame = True
 
 def readFileImage(dateCHeck):
 
@@ -105,67 +110,62 @@ def readFileImage(dateCHeck):
 
 encodeListKnown = findEncodings(images)
 
-width, height = 1700, 1280
-
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
 while True:
     success, frame = cap.read()
     imgS = cv2.resize(frame, (0, 0), None, 0.5, 0.5)
     imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
 
-    facesCurFrame = face_recognition.face_locations(imgS)
-    encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame)
+    if process_this_frame:
+        face_locations = face_recognition.face_locations(imgS)
+        encodesCurFrame = face_recognition.face_encodings(imgS, face_locations)
 
-    for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):
-        matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
-        faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)
-        matchIndex = np.argmin(faceDis)
+        face_names = []
+        for encodeFace, faceLoc in zip(encodesCurFrame, face_locations):
+            matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
+            faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)
+            matchIndex = np.argmin(faceDis)
 
-        if matches[matchIndex]:
+            if matches[matchIndex]:
 
-            sortName = np.sort(faceDis)
-            medium = sortName[int(sortName.size / 2)]
+                sortName = np.sort(faceDis)
+                medium = sortName[int(sortName.size / 2)]
 
-            name = classNames[matchIndex].upper()
+                name = classNames[matchIndex].upper()
 
-            if medium - faceDis[matchIndex] > 0.2:
-                timeSleep += 1
-                if timeSleep % 15 == 0:
-                    dateDetect = f'{name[:-2]}_{str(datetime.now())}'
+                if medium - faceDis[matchIndex] > 0.2:
+                    timeSleep += 1
+                    if timeSleep % 15 == 0:
+                        dateDetect = f'{name[:-2]}_{str(datetime.now())}'
 
-                    dateArrayHistory.insert(0, dateDetect)
+                        dateArrayHistory.insert(0, dateDetect)
 
-                    clearFounder()
-                    clearFrame()
-                    cv2.imwrite('HistoryFaceDetect/' + name[:-2] + '.jpg', frame)
-                    readFileImage(dateArrayHistory)
+                        clearFounder()
+                        clearFrame()
+                        cv2.imwrite('HistoryFaceDetect/' + name[:-2] + '.jpg', frame)
+                        readFileImage(dateArrayHistory)
+                    else:
+                        face_names.append(name)
                 else:
-                    y1, x2, y2, x1 = faceLoc
-                    y1, x2, y2, x1 = y1 * 2, x2 * 2, y2 * 2, x1 * 2
-                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                    cv2.rectangle(frame, (x1, y2 - 35), (x2, y2), (0, 255, 0), cv2.FILLED)
+                    name = "Unknown"
+                    face_names.append(name)
 
-                    cv2.putText(frame, name[:-2], (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
-                    # cv2.putText(frame, str(datetime.now()), (x1 + 6, y2 + 50), cv2.FONT_HERSHEY_COMPLEX, 1,
-                    #             (255, 255, 255),
-                    #             2)
-            else:
-                y1, x2, y2, x1 = faceLoc
-                y1, x2, y2, x1 = y1 * 2, x2 * 2, y2 * 2, x1 * 2
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                cv2.rectangle(frame, (x1, y2 - 35), (x2, y2), (0, 255, 0), cv2.FILLED)
+    process_this_frame = not process_this_frame
 
-                # cv2.putText(frame, str(datetime.now()), (x1 + 6, y2 + 50), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255),
-                #             2)
-                cv2.putText(frame, "Unknown", (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+    # Display the results
+    for faceLoc1, name1 in zip(face_locations, face_names):
+        y1, x2, y2, x1 = faceLoc1
+        y1, x2, y2, x1 = y1 * 2, x2 * 2, y2 * 2, x1 * 2
+        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        cv2.rectangle(frame, (x1, y2 - 35), (x2, y2), (0, 255, 0), cv2.FILLED)
+        if name == "Unknown":
+            cv2.putText(frame, name1, (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+        else:
+            cv2.putText(frame, name1[:-2], (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
 
-            cv2.putText(frame, f'{round(faceDis[matchIndex], 2)}', (50, 50), cv2.FONT_HERSHEY_COMPLEX, 1,
-                        (0, 0, 255), 2)
-
-    # frameFlip = cv2.flip(frame, 1)
     cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
     img = PIL.Image.fromarray(cv2image)
     imgtk = ImageTk.PhotoImage(image=img)

@@ -12,6 +12,7 @@
 
 import face_recognition
 import cv2
+
 import numpy as np
 
 # This is a demo of running face recognition on live video from your webcam. It's a little more complicated than the
