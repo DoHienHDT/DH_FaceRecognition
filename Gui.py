@@ -5,8 +5,10 @@ from PIL import Image, ImageTk
 import face_recognition
 import os
 import PIL
+import asyncio
 import shutil
 from datetime import datetime
+import pickle
 
 
 def addBox(arrayImageHistory, dateCHeck):
@@ -59,7 +61,6 @@ canvas.pack(side="left")
 canvas.create_window((0, 0), window=window, anchor='nw')
 window.bind("<Configure>", myfunction)
 
-
 for cl in myList:
     curImg = cv2.imread(f'{path}/{cl}')
     images.append(curImg)
@@ -94,8 +95,8 @@ imagesHistory = []
 dateArrayHistory = []
 process_this_frame = True
 
-def readFileImage(dateCHeck):
 
+def readFileImage(dateCHeck):
     myList = os.listdir(pathHisotry)
     for clArray in myList:
         nameFile = f'{pathHisotry}/{clArray}'
@@ -108,7 +109,11 @@ def readFileImage(dateCHeck):
         addBox(imagesHistory, dateCHeck)
 
 
-encodeListKnown = findEncodings(images)
+with open('dataset_faces.dat', 'rb') as f:
+    all_face_encodings = pickle.load(f)
+
+encodeListKnown = all_face_encodings
+encodeListKnown = np.array(list(all_face_encodings.values()))
 
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
@@ -130,22 +135,23 @@ while True:
             matchIndex = np.argmin(faceDis)
 
             if matches[matchIndex]:
-
                 sortName = np.sort(faceDis)
                 medium = sortName[int(sortName.size / 2)]
-
                 name = classNames[matchIndex].upper()
 
                 if medium - faceDis[matchIndex] > 0.2:
                     timeSleep += 1
                     if timeSleep % 15 == 0:
+
                         dateDetect = f'{name[:-2]}_{str(datetime.now())}'
 
                         dateArrayHistory.insert(0, dateDetect)
 
                         clearFounder()
                         clearFrame()
+
                         cv2.imwrite('HistoryFaceDetect/' + name[:-2] + '.jpg', frame)
+
                         readFileImage(dateArrayHistory)
                     else:
                         face_names.append(name)
@@ -161,7 +167,7 @@ while True:
         y1, x2, y2, x1 = y1 * 2, x2 * 2, y2 * 2, x1 * 2
         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
         cv2.rectangle(frame, (x1, y2 - 35), (x2, y2), (0, 255, 0), cv2.FILLED)
-        if name == "Unknown":
+        if name1 == "Unknown":
             cv2.putText(frame, name1, (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
         else:
             cv2.putText(frame, name1[:-2], (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
@@ -173,5 +179,3 @@ while True:
     lmain.imgtk = imgtk
     lmain.configure(image=imgtk)
     root.update()
-
-
