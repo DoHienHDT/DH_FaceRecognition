@@ -27,9 +27,11 @@ def addBox(arrayImageHistory, dateCHeck):
 
 
 root = Tk()
+
 lmain = Label(root)
 lmain.pack(side="right")
 timeSleep = 0
+timeUnknow = 0
 path = 'ImagesCompany'
 images = []
 imagesDetect = []
@@ -112,24 +114,32 @@ def readFileImage(dateCHeck):
 with open('dataset_faces.dat', 'rb') as f:
     all_face_encodings = pickle.load(f)
 
+# Create arrays of known face encodings and their names
 encodeListKnown = all_face_encodings
 encodeListKnown = np.array(list(all_face_encodings.values()))
 
+# Get a reference to webcam #0 (the default one)
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
 while True:
+    # Grab a single frame of video
     success, frame = cap.read()
-    imgS = cv2.resize(frame, (0, 0), None, 0.5, 0.5)
-    imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
 
+    # Resize frame of video to 1/4 size for faster face recognition processing
+    imgS = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+    rgb_small_frame = imgS[:, :, ::-1]
+
+    # Only process every other frame of video to save time
     if process_this_frame:
-        face_locations = face_recognition.face_locations(imgS)
-        encodesCurFrame = face_recognition.face_encodings(imgS, face_locations)
+        face_locations = face_recognition.face_locations(rgb_small_frame)
+        encodesCurFrame = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
         face_names = []
         for encodeFace, faceLoc in zip(encodesCurFrame, face_locations):
+
+            # See if the face is a match for the known face(s)
             matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
             faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)
             matchIndex = np.argmin(faceDis)
@@ -153,24 +163,58 @@ while True:
                         cv2.imwrite('HistoryFaceDetect/' + name[:-2] + '.jpg', frame)
 
                         readFileImage(dateArrayHistory)
+                        timeSleep = 0
                     else:
                         face_names.append(name)
                 else:
-                    name = "Unknown"
-                    face_names.append(name)
+                    timeUnknow += 1
+                    if timeUnknow % 10 == 0:
+
+                        dateDetect = f'Hello_Person_{str(datetime.now())}'
+
+                        dateArrayHistory.insert(0, dateDetect)
+
+                        clearFounder()
+                        clearFrame()
+
+                        cv2.imwrite('HistoryFaceDetect/' + name[:-2] + '.jpg', frame)
+
+                        readFileImage(dateArrayHistory)
+                        timeUnknow = 0
+                    else:
+                        name = "Unknown"
+                        face_names.append(name)
+
 
     process_this_frame = not process_this_frame
 
     # Display the results
-    for faceLoc1, name1 in zip(face_locations, face_names):
-        y1, x2, y2, x1 = faceLoc1
-        y1, x2, y2, x1 = y1 * 2, x2 * 2, y2 * 2, x1 * 2
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        cv2.rectangle(frame, (x1, y2 - 35), (x2, y2), (0, 255, 0), cv2.FILLED)
-        if name1 == "Unknown":
-            cv2.putText(frame, name1, (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+    for (top, right, bottom, left), nameBox in zip(face_locations, face_names):
+
+        # Scale back up face locations since the frame we detected in was scaled to 1/4 size
+        top *= 4
+        right *= 4
+        bottom *= 4
+        left *= 4
+
+        if nameBox == "Unknown":
+            # Draw a box around the face
+            cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+
+            # Draw a label with a name below the face
+            cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
+            font = cv2.FONT_HERSHEY_DUPLEX
+            cv2.putText(frame, nameBox, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
         else:
-            cv2.putText(frame, name1[:-2], (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+            # cv2.putText(frame, name1[:-2], (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+
+            # Draw a box around the face
+            cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
+
+            # Draw a label with a name below the face
+            cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0), cv2.FILLED)
+            font = cv2.FONT_HERSHEY_DUPLEX
+            cv2.putText(frame, nameBox[:-2], (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
 
     cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
     img = PIL.Image.fromarray(cv2image)
