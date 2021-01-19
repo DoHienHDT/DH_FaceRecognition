@@ -6,9 +6,11 @@ import face_recognition
 import os
 import PIL
 import asyncio
+import threading
 import shutil
 from datetime import datetime
 import pickle
+from playsound import playsound
 
 
 def addBox(arrayImageHistory, dateCHeck):
@@ -18,7 +20,6 @@ def addBox(arrayImageHistory, dateCHeck):
         i += 1
         box_row = i * 2 + 1
         Button(window, image=imageArray).grid(row=box_row, column=1, ipadx=50)
-
     j = 0
     for timeCheck in dateCHeck:
         j += 1
@@ -63,6 +64,7 @@ canvas.pack(side="left")
 canvas.create_window((0, 0), window=window, anchor='nw')
 window.bind("<Configure>", myfunction)
 
+# read dataset and save image to
 for cl in myList:
     curImg = cv2.imread(f'{path}/{cl}')
     images.append(curImg)
@@ -123,12 +125,18 @@ cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 700)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 700)
 
+
+def alert():
+    threading.Thread(target=playsound, args=('Sound/drop_marker_sound.mp3',), daemon=True).start()
+
+
 while True:
     # Grab a single frame of video
     success, frame = cap.read()
 
     # Resize frame of video to 1/4 size for faster face recognition processing
     imgS = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+
     rgb_small_frame = imgS[:, :, ::-1]
 
     # Only process every other frame of video to save time
@@ -169,6 +177,7 @@ while True:
 
                         # read file after save image load ui
                         readFileImage(dateArrayHistory)
+                        alert()
                         timeSleep = 0
                     else:
                         # save name show realtime with camera

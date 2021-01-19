@@ -35,7 +35,7 @@ while True:
             # Save the captured image into the datasets folder
             cv2.imwrite("dataset/User." + str(face_id) + '.' + str(count) + ".jpg", gray[y:y + h, x:x + w])
 
-    if count >= 100:  # Take 30 face sample and stop video
+    if count >= 50:  # Take 30 face sample and stop video
         break
 
     cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
