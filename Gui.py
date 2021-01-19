@@ -17,19 +17,19 @@ def addBox(arrayImageHistory, dateCHeck):
     for imageArray in arrayImageHistory:
         i += 1
         box_row = i * 2 + 1
-        Button(window, image=imageArray).grid(row=box_row, column=1)
+        Button(window, image=imageArray).grid(row=box_row, column=1, ipadx=50)
 
     j = 0
     for timeCheck in dateCHeck:
         j += 1
         text_row = j * 2 + 2
-        Label(window, text=timeCheck).grid(row=text_row, column=1)
+        Label(window, text=timeCheck).grid(row=text_row, column=1, pady=20)
 
 
 root = Tk()
-
+root.geometry("1400x850")
 lmain = Label(root)
-lmain.pack(side="right")
+lmain.pack(side="right", anchor=NW)
 timeSleep = 0
 timeUnknow = 0
 path = 'ImagesCompany'
@@ -52,7 +52,7 @@ canvas = Canvas(frameAddBox, bg="white")
 
 
 def myfunction(event):
-    canvas.configure(scrollregion=canvas.bbox("all"), width=250, height=1150)
+    canvas.configure(scrollregion=canvas.bbox("all"), width=450, height=1150)
 
 
 window = Frame(canvas, bg="white")
@@ -103,7 +103,7 @@ def readFileImage(dateCHeck):
     for clArray in myList:
         nameFile = f'{pathHisotry}/{clArray}'
         imageOpen = Image.open(nameFile)
-        imageOpen = imageOpen.resize((200, 200), Image.ANTIALIAS)
+        imageOpen = imageOpen.resize((300, 300), Image.ANTIALIAS)
         addImageArray = ImageTk.PhotoImage(imageOpen)
         imagesHistory.insert(0, addImageArray)
 
@@ -120,8 +120,8 @@ encodeListKnown = np.array(list(all_face_encodings.values()))
 
 # Get a reference to webcam #0 (the default one)
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 700)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 700)
 
 while True:
     # Grab a single frame of video
